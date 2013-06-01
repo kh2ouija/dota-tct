@@ -1,0 +1,99 @@
+<html>
+  <head>
+    <title>DOTA2 Team Comp Tool</title>
+    <script src="heroes.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script language="javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      
+      role_names = ['Carry', 'Escape', 'Jungler', 'Disabler', 'Nuker', 'Support', 'LaneSupport', 'Initiator', 'Pusher', 'Durable']
+
+      $(document).ready(function() {
+        for (team_id = 0; team_id <= 4; team_id++) {
+          for (hero in heroes) {
+            $('#team' + team_id).append('<option value="'+hero+'">'+heroes[hero]['url']+'</option>')
+          }
+        }
+        $('#team0').change(update)
+        $('#team1').change(update)
+        $('#team2').change(update)
+        $('#team3').change(update)
+        $('#team4').change(update)
+
+        fragment = window.location.hash.substring(1)
+        if (fragment.length > 0) {
+          heroids = fragment.split(',')
+          for (i = 0; i < heroids.length; i++) {
+            heroid = heroids[i]
+            $('#team'+i).val(heroid)
+          }
+        }
+
+        barchart = new google.visualization.BarChart(document.getElementById('barchart_div'));
+        piechart = new google.visualization.PieChart(document.getElementById('piechart_div'));
+      });
+
+      function rolelevel(hero, role) {
+        roles = heroes[hero]['Role'].split(',')
+        for (i = 0; i < roles.length; i++) {
+          if (roles[i] == role) {
+            return heroes[hero]['Rolelevels'].split(',')[i]
+          }
+        }
+        return 0
+      }
+
+      function teamlevel(role) {
+        sum = 0;
+        for (team_id = 0; team_id <= 4; team_id++) {
+          sum += parseInt(rolelevel($('#team'+team_id).val(), role))
+        }
+        return sum
+      }
+
+      function update() {
+        query = ""
+        for (i = 0; i <= 4; i++) {
+          query += $('#team'+i).val() + ","
+        }
+        parent.location.hash = query;
+        drawChart()
+      }
+
+      function drawChart() {
+        var data_array = [['Role', 'Value']]
+        for (role_id in role_names) {
+          data_array.push([role_names[role_id], teamlevel(role_names[role_id])])
+        }
+        var data = google.visualization.arrayToDataTable(data_array)
+
+        var options = {
+          title: 'Team Potential',
+          animation:{
+            duration: 1000,
+            easing: 'out'
+          },
+        };
+
+        piechart.draw(data, options);
+        barchart.draw(data, options);
+      }
+    </script>
+  </head>
+  <select id="team0">
+  </select> 
+  <select id="team1">
+  </select> 
+  <select id="team2">
+  </select> 
+  <select id="team3">
+  </select> 
+  <select id="team4">
+  </select>
+  <br/>
+  <div id="piechart_div" style="width: 900px; height: 400px;"></div>
+  <div id="barchart_div" style="width: 900px; height: 400px;"></div>
+
+</html>
