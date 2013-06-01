@@ -13,7 +13,7 @@
       $(document).ready(function() {
         for (team_id = 0; team_id <= 4; team_id++) {
           for (hero in heroes) {
-            $('#team' + team_id).append('<option value="'+hero+'">'+heroes[hero]['url']+'</option>')
+            $('#team' + team_id).append('<option value="'+hero+'">'+heroes[hero]['name']+'</option>')
           }
         }
         $('#team0').change(update)
@@ -36,10 +36,12 @@
       });
 
       function rolelevel(hero, role) {
-        roles = heroes[hero]['Role'].split(',')
-        for (i = 0; i < roles.length; i++) {
-          if (roles[i] == role) {
-            return heroes[hero]['Rolelevels'].split(',')[i]
+        if (heroes[hero] != null) {
+          roles = heroes[hero]['Role'].split(',')
+          for (i = 0; i < roles.length; i++) {
+            if (roles[i] == role) {
+              return heroes[hero]['Rolelevels'].split(',')[i]
+            }
           }
         }
         return 0
@@ -83,14 +85,19 @@
     </script>
   </head>
   <select id="team0">
+    <option value="">Select a hero</option>
   </select> 
   <select id="team1">
+    <option value="">Select a hero</option>
   </select> 
   <select id="team2">
+    <option value="">Select a hero</option>
   </select> 
   <select id="team3">
+    <option value="">Select a hero</option>
   </select> 
   <select id="team4">
+    <option value="">Select a hero</option>
   </select>
   <br/>
   <div id="piechart_div" style="width: 900px; height: 400px;"></div>
