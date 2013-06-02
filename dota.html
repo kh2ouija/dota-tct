@@ -6,9 +6,9 @@
     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
     <script language="javascript">
       google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
+      google.setOnLoadCallback(drawCharts);
       
-      role_names = ['Carry', 'Escape', 'Jungler', 'Disabler', 'Nuker', 'Support', 'LaneSupport', 'Initiator', 'Pusher', 'Durable']
+      role_names = ['Carry', 'Support', 'Nuker', 'Initiator', 'Disabler', 'Pusher', 'Durable', 'Escape', 'Jungler', 'LaneSupport']
 
       $(document).ready(function() {
         for (team_id = 0; team_id <= 4; team_id++) {
@@ -31,8 +31,11 @@
           }
         }
 
-        barchart = new google.visualization.BarChart(document.getElementById('barchart_div'));
-        piechart = new google.visualization.PieChart(document.getElementById('piechart_div'));
+        potential_chart = new google.visualization.BarChart(document.getElementById('potential_chart_div'));
+        attack_chart = new google.visualization.PieChart(document.getElementById('attack_chart_div'));
+        primary_chart = new google.visualization.PieChart(document.getElementById('primary_chart_div'));
+
+        update()
       });
 
       function rolelevel(hero, role) {
@@ -47,28 +50,91 @@
         return 0
       }
 
-      function teamlevel(role) {
+      function team_level(role) {
         sum = 0;
-        for (team_id = 0; team_id <= 4; team_id++) {
-          sum += parseInt(rolelevel($('#team'+team_id).val(), role))
+        for (select_id = 0; select_id <= 4; select_id++) {
+          sum += parseInt(rolelevel($('#team'+select_id).val(), role))
         }
         return sum
       }
 
+      function team_attacks() {
+        ranged = 0
+        melee = 0
+        for (select_id = 0; select_id <= 4; select_id++) {
+          hero = heroes[$('#team'+select_id).val()]
+          if (hero != null) {
+            if (hero['AttackCapabilities'] == 'DOTA_UNIT_CAP_MELEE_ATTACK') {
+              melee++;
+            }
+            if (hero['AttackCapabilities'] == 'DOTA_UNIT_CAP_RANGED_ATTACK') {
+              ranged++;
+            }
+          }
+        }
+        return [['Attack', 'Value'], ['Melee', melee], ['Ranged', ranged]]
+      }
+
+      function team_primary() {
+        strength = 0
+        agility = 0
+        intellect = 0
+        for (select_id = 0; select_id <= 4; select_id++) {
+          hero = heroes[$('#team'+select_id).val()]
+          if (hero != null) {
+            if (hero['AttributePrimary'] == 'DOTA_ATTRIBUTE_STRENGTH') {
+              strength++;
+            }
+            if (hero['AttributePrimary'] == 'DOTA_ATTRIBUTE_STRENGTH') {
+              agility++;
+            }
+            if (hero['AttributePrimary'] == 'DOTA_ATTRIBUTE_INTELLECT') {
+              intellect++;
+            }
+          }
+        }
+        return [['Primary', 'Value'], ['Strength', strength], ['Agility', agility], ['Intellect', intellect]]
+      }
+
       function update() {
+        updateUrl()
+        updateDetails()
+        drawCharts()
+      }
+
+      function updateUrl() {
         query = ""
         for (i = 0; i <= 4; i++) {
           query += $('#team'+i).val() + ","
         }
         parent.location.hash = query;
-        drawChart()
       }
 
-      function drawChart() {
+      function updateDetails() {
+        for (select_id = 0; select_id <= 4; select_id++) {
+          hero = heroes[$('#team'+select_id).val()]
+          if (hero != null) {
+            bot = hero['Bot']
+            if (bot != null) {
+              roles = bot['HeroType'].split(' | ').map(function(a) {return a.substring(9).replace('_', ' ')}).join(', ')
+              $('#details'+select_id).text(roles)
+            }
+          }
+        }
+      }
+
+      function drawCharts() {
+        drawPotentialChart()
+        drawAttackChart()
+        drawPrimaryChart()
+      }
+
+      function drawPotentialChart() {
         var data_array = [['Role', 'Value']]
         for (role_id in role_names) {
-          data_array.push([role_names[role_id], teamlevel(role_names[role_id])])
+          data_array.push([role_names[role_id], team_level(role_names[role_id])])
         }
+        // data_array.sort(function(a, b) {return b[1] - a[1]})
         var data = google.visualization.arrayToDataTable(data_array)
 
         var options = {
@@ -79,28 +145,62 @@
           },
         };
 
-        piechart.draw(data, options);
-        barchart.draw(data, options);
+        potential_chart.draw(data, options);
+      }
+
+      function drawAttackChart() {
+        var data_array = team_attacks()   
+        var data = google.visualization.arrayToDataTable(data_array)
+
+        var options = {
+          title: 'Main attack'
+        };
+
+        attack_chart.draw(data, options);
+      }
+
+      function drawPrimaryChart() {
+        var data_array = team_primary()   
+        var data = google.visualization.arrayToDataTable(data_array)
+
+        var options = {
+          title: 'Primary attributes',
+          colors:['red', 'green', 'blue']
+        };
+
+        primary_chart.draw(data, options);
       }
     </script>
   </head>
   <select id="team0">
     <option value="">Select a hero</option>
-  </select> 
+  </select>
+  <span id="details0"></span><br/>
   <select id="team1">
     <option value="">Select a hero</option>
   </select> 
+  <span id="details1"></span><br/>
   <select id="team2">
     <option value="">Select a hero</option>
-  </select> 
+  </select>
+  <span id="details2"></span><br/>
   <select id="team3">
     <option value="">Select a hero</option>
   </select> 
+  <span id="details3"></span><br/>
   <select id="team4">
     <option value="">Select a hero</option>
   </select>
+  <span id="details4"></span><br/>
   <br/>
-  <div id="piechart_div" style="width: 900px; height: 400px;"></div>
-  <div id="barchart_div" style="width: 900px; height: 400px;"></div>
+  <table>
+    <tr>
+      <td><div id="primary_chart_div" style="width: 500px; height: 400px;"/></td>  
+      <td><div id="attack_chart_div" style="width: 500px; height: 400px;"/></td>          
+    </tr>
+    <tr>
+      <td colspan=2><div id="potential_chart_div" style="width: 800px; height: 400px;"/></td>
+    </tr>
+  </table>
 
 </html>
