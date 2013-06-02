@@ -8,8 +8,8 @@ heroes.delete 'npc_dota_hero_base'
 heroes.delete 'Version'
 
 heroes2 = {}
-heroes.keys.sort.each do |k|
-  v = heroes[k]
+heroes.values.sort { |a, b| a['url'] <=> b['url'] }.each do |v|
+  k = heroes.key v
   v['name'] = v['url'].titleize
   heroes2[k[14..-1]] = v
 end
